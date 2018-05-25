@@ -1,34 +1,138 @@
+#!/usr/bin/python
+""" cherrypy_example.py
+
+	COMPSYS302 - Software Design
+	Author: Andrew Chen (andrew.chen@auckland.ac.nz)
+	Last Edited: 19/02/2018
+
+	This program uses the CherryPy web server (from www.cherrypy.org).
+"""
+# Requires:  CherryPy 3.2.2  (www.cherrypy.org)
+#            Python  (We use 2.7)
+
+# The address we listen for connections on
+listen_ip = "0.0.0.0"
+listen_port = 1234
+
+import cherrypy
 import urllib
 import urllib2
-
-'''try:
-    a = urllib.urlopen('https://www.google.com')
-    print(a.read())
-
-except Exception as e:
-    print(str(e))
- '''
+import hashlib
+import socket
 
 
-url = 'http://cs302.pythonanywhere.com/report?'
-values = {'username' : 'rdso323',
-          'password' : '8F61A0B4911467540CD6DF03E59E40D041323BC8BEB1A3744E22BF4E7458B869',
-          'location' : '2',
-          'ip' : '10.0.2.15',
-          'port' : '10007',
-          'enc' : '0'}
+class MainApp(object):
 
-data = urllib.urlencode(values)
-# data = data.encode('utf-8')
-# req = urllib2.Request(url,data)
-# resp = urllib2.urlopen(req)
-# respData = resp.read()
+	#CherryPy Configuration
+	_cp_config = {'tools.encode.on': True,
+				  'tools.encode.encoding': 'utf-8',
+				  'tools.sessions.on' : 'True',
+				 }
 
-respdata = urllib2.urlopen(url+data).read()
+	# If they try somewhere we don't know, catch it here and send them to the right place.
+	@cherrypy.expose
+	def default(self, *args, **kwargs):
+		"""The default page, given when we don't recognise where the request is for."""
+		Page = "I don't know where you're trying to go, so have a 404 Error."
+		cherrypy.response.status = 404
+		return Page
 
-''' http: // cs302.pythonanywhere.com / report?username = rdso323 & password = 8
-F61A0B4911467540CD6DF03E59E40D041323BC8BEB1A3744E22BF4E7458B869 & location = 2 & ip = 10.0
-.2.15 & port = 10007 & enc = 0'''
+	# PAGES (which return HTML that can be viewed in browser)
+	@cherrypy.expose
+	def index(self):
+		Page = "Welcome to the COMPSYS302 Login Page!<br/>"
 
-print(respdata)
+		try:
+			Page += "Hello " + cherrypy.session['username'] + "!<br/>"
+			Page += "Here is some bonus text because you've logged in!"
+		except KeyError: #There is no username
 
+			Page += "Click here to <a href='login'>Login</a>."
+		return Page
+
+	@cherrypy.expose
+	def login(self):
+		Page = '<form action="/signin" method="post" enctype="multipart/form-data">'
+		Page += 'Username: <input type="text" name="username"/><br/>'
+		Page += 'Password: &nbsp<input type="text" name="password"/><br/><br/>'
+		Page += '<input type="submit" value="Login"/></form>'
+		return Page
+
+	@cherrypy.expose
+	def sum(self, a=0, b=0): #All inputs are strings by default
+		output = int(a)+int(b)
+		return str(output)
+
+	# LOGGING IN AND OUT
+	@cherrypy.expose
+	def signin(self, username=None, password=None):
+		"""Check their name and password and send them either to the main page, or back to the main login screen."""
+		error = self.authoriseUserLogin(username,password)
+		if (error == 0):
+			cherrypy.session['username'] = username;
+			raise cherrypy.HTTPRedirect('/')
+		else:
+			raise cherrypy.HTTPRedirect('/login')
+
+	@cherrypy.expose
+	def signout(self):
+		"""Logs the current user out, expires their session"""
+		username = cherrypy.session.get('username')
+		if (username == None):
+			pass
+		else:
+			cherrypy.lib.sessions.expire()
+		raise cherrypy.HTTPRedirect('/')
+
+	def authoriseUserLogin(self, username, password):
+		print username
+		print password
+		if (username.lower() == "rdso323") and (password.lower() == "remainnail"):
+			password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
+			IP = socket.gethostbyname(socket.gethostname())
+			url = 'http://cs302.pythonanywhere.com/report?'
+			values = {'username' : username,
+				'password' : password_hash,
+				'location' : '2',
+				'ip' : IP,	#'10.0.2.15',
+				'port' : '10007',
+				'enc' : '0'}
+
+			try:
+				data = urllib.urlencode(values)					#Set values in dictionary together (Seperated with &)
+				respdata = urllib2.urlopen(url+data).read()
+				print(respdata)
+				if(respdata.count('0')>=1):
+					return 0
+				elif(respdata.count('1')>=0):
+					return 1
+
+			except Exception as e:
+				print(str(e))
+		else:
+			return 1
+
+
+def runMainApp():
+	# Create an instance of MainApp and tell Cherrypy to send all requests under / to it. (ie all of them)
+	cherrypy.tree.mount(MainApp(), "/")
+
+	# Tell Cherrypy to listen for connections on the configured address and port.
+	cherrypy.config.update({'server.socket_host': listen_ip,
+							'server.socket_port': listen_port,
+							'engine.autoreload.on': True,
+						   })
+
+	print "========================="
+	print "University of Auckland"
+	print "COMPSYS302 - Software Design Application"
+	print "========================================"
+
+	# Start the web server
+	cherrypy.engine.start()
+
+	# And stop doing anything else. Let the web server take over.
+	cherrypy.engine.block()
+ 
+#Run the function to start everything
+runMainApp()
