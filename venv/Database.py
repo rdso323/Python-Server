@@ -35,8 +35,20 @@ def StoreUsers(username,ip,location,lastLogin,port):
             cursor.execute(sql_command)
 
 
-
+    #print(res)
     # never forget this, if you want the changes to be saved:
     connection.commit()
 
     connection.close()
+
+def ExtractUsers():
+    Users = []
+    connection = sqlite3.connect("StoreUsers.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM OnlineUsers")
+    res = cursor.fetchall()
+    for i in range (0,len(res)):
+        Users.append(res[i][0])
+        print res[i][0]
+
+    return ', '.join(Users)     #Convert list into a string

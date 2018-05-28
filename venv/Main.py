@@ -48,6 +48,7 @@ class MainApp(object):
 			Page += "Here is some bonus text because you've logged in! <br/><br/>"
 			Page += "Online Users:<br/>"
 			Page += self.UserDisplay()
+			Page += "<br/><br/>Click here to <a href='signout'>Logout</a>."
 		except KeyError: #There is no username
 			Page += "Click here to <a href='login'>Login</a>."
 		return Page
@@ -58,11 +59,6 @@ class MainApp(object):
 		Page += 'Username: <input type="text" name="username"/><br/>'
 		Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
 		Page += '<input type="submit" value="Login"/></form>'
-		Page += '<form action="http://cs302.pythonanywhere.com/getList?username=rdso323&password=8f61a0b4911467540cd6df03e59e40d041323bc8beb1a3744e22bf4e7458b869&enc=0&json=0" method="post" enctype="multipart/form-data">'
-		#Page += '<form action="UserDisplay()" method="post" enctype="multipart/form-data">'
-		Page += '<input type="submit" value="Online Users"/></form>'
-		# Page = urllib.urlopen("lib/Layout.html").read()
-		# print Page
 		return Page
 
 	@cherrypy.expose			#Display users online
@@ -100,7 +96,8 @@ class MainApp(object):
 			# print port[x]
 
 		Database.StoreUsers(username,ip,location,lastLogin,port)
-		return '0'
+		Users = Database.ExtractUsers()
+		return Users
 
 	@cherrypy.expose
 	def sum(self, a=0, b=0): #All inputs are strings by default
@@ -114,6 +111,7 @@ class MainApp(object):
 		error = self.authoriseUserLogin(username,password)
 		if (error == 0):
 			cherrypy.session['username'] = username;
+			cherrypy.session['password'] = password;
 			raise cherrypy.HTTPRedirect('/')
 		else:
 			raise cherrypy.HTTPRedirect('/login')
@@ -122,10 +120,21 @@ class MainApp(object):
 	@cherrypy.expose
 	def signout(self):
 		"""Logs the current user out, expires their session"""
+
 		username = cherrypy.session.get('username')
+		password = cherrypy.session.get('password')
+		password_hash = hashlib.sha256(password + username).hexdigest()  # Hash the password
+
+		url = 'http://cs302.pythonanywhere.com/logoff?'
+		values = {'username': username,
+				  'password': password_hash,
+				  'enc': '0'}
+
 		if (username == None):
 			pass
 		else:
+			data = urllib.urlencode(values)  # Set values in dictionary together (Seperated with &)
+			respdata = urllib2.urlopen(url + data).read()
 			cherrypy.lib.sessions.expire()
 		raise cherrypy.HTTPRedirect('/')
 
@@ -154,6 +163,7 @@ class MainApp(object):
 					return 1
 
 			except Exception as e:
+				return 1
 				print(str(e))
 		else:
 			return 1
