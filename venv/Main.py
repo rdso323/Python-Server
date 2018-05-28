@@ -19,7 +19,8 @@ import urllib
 import urllib2
 import hashlib
 import socket
-
+import json
+import Database
 
 class MainApp(object):
 
@@ -44,9 +45,10 @@ class MainApp(object):
 
 		try:
 			Page += "Hello " + cherrypy.session['username'] + "!<br/>"
-			Page += "Here is some bonus text because you've logged in!"
+			Page += "Here is some bonus text because you've logged in! <br/><br/>"
+			Page += "Online Users:<br/>"
+			Page += self.UserDisplay()
 		except KeyError: #There is no username
-
 			Page += "Click here to <a href='login'>Login</a>."
 		return Page
 
@@ -54,9 +56,51 @@ class MainApp(object):
 	def login(self):
 		Page = '<form action="/signin" method="post" enctype="multipart/form-data">'
 		Page += 'Username: <input type="text" name="username"/><br/>'
-		Page += 'Password: &nbsp<input type="text" name="password"/><br/><br/>'
+		Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
 		Page += '<input type="submit" value="Login"/></form>'
+		Page += '<form action="http://cs302.pythonanywhere.com/getList?username=rdso323&password=8f61a0b4911467540cd6df03e59e40d041323bc8beb1a3744e22bf4e7458b869&enc=0&json=0" method="post" enctype="multipart/form-data">'
+		#Page += '<form action="UserDisplay()" method="post" enctype="multipart/form-data">'
+		Page += '<input type="submit" value="Online Users"/></form>'
+		# Page = urllib.urlopen("lib/Layout.html").read()
+		# print Page
 		return Page
+
+	@cherrypy.expose			#Display users online
+	def UserDisplay(self):
+		url = 'http://cs302.pythonanywhere.com/getList?'
+		values = {'username': 'rdso323',
+				  'password': '8f61a0b4911467540cd6df03e59e40d041323bc8beb1a3744e22bf4e7458b869',
+				  'enc': '0',
+				  'json': '1'}
+
+		data = urllib.urlencode(values)  # Set values in dictionary together (Seperated with &)
+		respdata = urllib2.urlopen(url + data).read()
+		input_data = json.loads(respdata)
+
+
+		username= []					#Create a list
+		ip = []
+		location = []
+		lastLogin = []
+		port = []
+
+		for x in range (0,len(input_data)):
+			username.append(input_data[str(x)]['username'])
+			ip.append(input_data[str(x)]['ip'])
+			location.append(input_data[str(x)]['location'])
+			lastLogin.append(input_data[str(x)]['lastLogin'])
+			port.append(input_data[str(x)]['port'])
+
+
+		#for x in range(0, len(username)):
+			#print username[x]
+			# print ip[x]
+			# print location[x]
+			# print lastLogin[x]
+			# print port[x]
+
+		Database.StoreUsers(username,ip,location,lastLogin,port)
+		return '0'
 
 	@cherrypy.expose
 	def sum(self, a=0, b=0): #All inputs are strings by default
@@ -74,6 +118,7 @@ class MainApp(object):
 		else:
 			raise cherrypy.HTTPRedirect('/login')
 
+		#http://cs302.pythonanywhere.com/getList?username=rdso323&password=8f61a0b4911467540cd6df03e59e40d041323bc8beb1a3744e22bf4e7458b869&enc=0&json=0
 	@cherrypy.expose
 	def signout(self):
 		"""Logs the current user out, expires their session"""
@@ -89,7 +134,8 @@ class MainApp(object):
 		print password
 		if (username.lower() == "rdso323") and (password.lower() == "remainnail"):
 			password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
-			IP = socket.gethostbyname(socket.gethostname())
+			IP = socket.gethostbyname(socket.gethostname())							#Attain IP
+			print password_hash
 			url = 'http://cs302.pythonanywhere.com/report?'
 			values = {'username' : username,
 				'password' : password_hash,
