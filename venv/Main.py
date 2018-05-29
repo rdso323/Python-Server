@@ -49,16 +49,18 @@ class MainApp(object):
 			Page += "Online Users:<br/>"
 			Page += self.UserDisplay()
 			Page += "<br/><br/>Click here to <a href='signout'>Logout</a>."
+			#Page += "<br/>" + cherrypy.session['sender'] + ":" + cherrypy.session['message']
 		except KeyError: #There is no username
 			Page += "Click here to <a href='login'>Login</a>."
 		return Page
 
 	@cherrypy.expose
 	def login(self):
-		Page = '<form action="/signin" method="post" enctype="multipart/form-data">'
-		Page += 'Username: <input type="text" name="username"/><br/>'
-		Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
-		Page += '<input type="submit" value="Login"/></form>'
+		# Page = '<form action="/signin" method="post" enctype="multipart/form-data">'
+		# Page += 'Username: <input type="text" name="username"/><br/>'
+		# Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
+		# Page += '<input type="submit" value="Login"/></form>'
+		Page = file('Layout.html')
 		return Page
 
 	@cherrypy.expose			#Display users online
@@ -107,6 +109,7 @@ class MainApp(object):
 	# LOGGING IN AND OUT
 	@cherrypy.expose
 	def signin(self, username=None, password=None):
+		print 'hey'
 		"""Check their name and password and send them either to the main page, or back to the main login screen."""
 		error = self.authoriseUserLogin(username,password)
 		if (error == 0):
@@ -167,6 +170,18 @@ class MainApp(object):
 				print(str(e))
 		else:
 			return 1
+
+	@cherrypy.expose
+	def ping(self,sender):
+		return '0'
+
+
+	@cherrypy.expose
+	def recieveMessage(self,sender,destination,message,stamp):
+		cherrypy.session['sender'] = sender;
+		cherrypy.session['message'] = message;
+		return "Message Recieved"
+
 
 
 def runMainApp():
