@@ -10,9 +10,7 @@
 # Requires:  CherryPy 3.2.2  (www.cherrypy.org)
 #            Python  (We use 2.7)
 
-# The address we listen for connections on
-listen_ip = "0.0.0.0"
-listen_port = 1234
+
 
 import cherrypy
 import urllib
@@ -21,6 +19,18 @@ import hashlib
 import socket
 import json
 import Database
+
+
+
+
+
+# The address we listen for connections on
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+listen_ip = (s.getsockname()[0])			#Attain IP
+s.close()
+
+listen_port = 10007
 
 class MainApp(object):
 
@@ -146,14 +156,13 @@ class MainApp(object):
 		print password
 		if (username.lower() == "rdso323") and (password.lower() == "remainnail"):
 			password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
-			IP = socket.gethostbyname(socket.gethostname())							#Attain IP
 			print password_hash
 			url = 'http://cs302.pythonanywhere.com/report?'
 			values = {'username' : username,
 				'password' : password_hash,
 				'location' : '2',
-				'ip' : IP,	#'10.0.2.15',
-				'port' : '10007',
+				'ip' : listen_ip,	#'10.0.2.15',
+				'port' : listen_port,
 				'enc' : '0'}
 
 			try:
@@ -173,15 +182,25 @@ class MainApp(object):
 
 	@cherrypy.expose
 	def ping(self,sender):
+		print 'ping working'
 		return '0'
 
 
-	@cherrypy.expose
-	def recieveMessage(self,sender,destination,message,stamp):
-		cherrypy.session['sender'] = sender;
-		cherrypy.session['message'] = message;
-		return "Message Recieved"
+	# @cherrypy.expose
+	# def recieveMessage(self,sender,destination,message,stamp):
+	# 	message = json.loads(message)
+	# 	cherrypy.session['sender'] = sender;
+	# 	cherrypy.session['message'] = message;
+	# 	Database.ExtractMessage(sender,destination,message,stamp)
+	# 	return 'Message Recieved'
 
+	@cherrypy.expose
+	@cherrypy.tools.json_in()
+	def receiveMessage(self,message):
+		input_data = cherrypy.request.json
+		print 'Message'
+		return 'Message Recieved'
+,
 
 
 def runMainApp():

@@ -52,3 +52,35 @@ def ExtractUsers():
         print res[i][0]
 
     return ', '.join(Users)     #Convert list into a string
+
+
+def ExtractMessage(sender,destination,message,stamp):
+    connection = sqlite3.connect("StoreMessages.db")
+    cursor = connection.cursor()
+
+    sql_command = """
+       CREATE TABLE IF NOT EXISTS Messages ( 
+       Sender TEXT, 
+       Destination, TEXT,
+       Message  TEXT,
+       Time_Stamp);"""
+
+    cursor.execute(sql_command)
+
+    cursor = connection.cursor()
+
+    # print(input_data)
+    user_data = [(sender, destination, message, stamp)]
+
+    for p in user_data:
+        format_str = """INSERT INTO OnlineUsers (Sender,Destination,Message,Time_Stamp) 
+           VALUES ("{Sender}", "{Destination}", "{Message}", "{Time_Stamp}");"""
+
+        sql_command = format_str.format(sender=p[0], destination=p[1], message=p[2], stamp=p[3])
+        cursor.execute(sql_command)
+
+    # print(res)
+    # never forget this, if you want the changes to be saved:
+    connection.commit()
+
+    connection.close()
