@@ -156,19 +156,26 @@ class MainApp(object):
 		print password
 		if (username.lower() == "rdso323") and (password.lower() == "remainnail"):
 			password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
-			print password_hash
+			if(listen_ip.count('10.103')>0):
+				location = 0
+			elif(listen_ip.count('172.2')>0):
+				location = 1
+			else:
+				location = 2
+
+			print location
 			url = 'http://cs302.pythonanywhere.com/report?'
 			values = {'username' : username,
 				'password' : password_hash,
-				'location' : '2',
+				'location' : location,
 				'ip' : listen_ip,	#'10.0.2.15',
 				'port' : listen_port,
 				'enc' : '0'}
-
+			print(location)
 			try:
 				data = urllib.urlencode(values)					#Set values in dictionary together (Seperated with &)
 				respdata = urllib2.urlopen(url+data).read()
-				print(respdata)
+				#print(respdata)
 				if(respdata.count('0')>=1):
 					return 0
 				elif(respdata.count('1')>=0):
@@ -186,9 +193,12 @@ class MainApp(object):
 		return '0'
 
 
-	# @cherrypy.expose
-	# def recieveMessage(self,sender,destination,message,stamp):
-	# 	message = json.loads(message)
+	@cherrypy.expose
+	def sendMessage(self,sender,destination,message,stamp):
+		output = {"sender":sender,"destination":destination,
+				  "message":message,"stamp":stamp}
+		data = json.dumps(output)
+		return output
 	# 	cherrypy.session['sender'] = sender;
 	# 	cherrypy.session['message'] = message;
 	# 	Database.ExtractMessage(sender,destination,message,stamp)
@@ -196,11 +206,15 @@ class MainApp(object):
 
 	@cherrypy.expose
 	@cherrypy.tools.json_in()
-	def receiveMessage(self,message):
+	def receiveMessage(self):
 		input_data = cherrypy.request.json
-		print 'Message'
-		return 'Message Recieved'
-,
+		print input_data
+		print 'Message working'
+		return '0'
+
+	@cherrypy.expose
+	def getProfile(self):
+		'hi'
 
 
 def runMainApp():
