@@ -19,7 +19,8 @@ import hashlib
 import socket
 import json
 import Database
-
+import os,os.path
+import time
 
 
 
@@ -60,6 +61,7 @@ class MainApp(object):
 			Page += "Online Users:<br/>"
 			Page += self.UserDisplay()
 			Page += "<br/><br/>Click here to <a href='signout'>Logout</a>."
+			Page += "<br/>Click here to <a href='sendMessage'>send message</a>"
 			#Page += "<br/>" + cherrypy.session['sender'] + ":" + cherrypy.session['message']
 		except KeyError: #There is no username
 			Page += "Click here to <a href='login'>Login</a>."
@@ -183,8 +185,9 @@ class MainApp(object):
 					return 1
 
 			except Exception as e:
-				return 1
 				print(str(e))
+				return 1
+
 		else:
 			return 1
 
@@ -195,12 +198,19 @@ class MainApp(object):
 
 
 	@cherrypy.expose
-	def sendMessage(self,sender,destination,message,stamp):
-		output = {"sender":sender,"destination":destination,
-				  "message":message,"stamp":stamp}
-		data = json.dumps(output)
+	def sendMessage(self):
+		output = {"sender":cherrypy.session['username'],"destination":'dtri722',
+				  "message":'Suck a dick',"stamp":time.time()}
 
-		return data
+		data = json.dumps(output)
+		IP = Database.ExtractIP('jpat331')
+		Port = Database.ExtractPort('jpat331')
+
+		URL = 'http://' + IP + ':' + Port+ '/receiveMessage'
+
+		req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
+		response = urllib2.urlopen(req)
+		return response
 	# 	cherrypy.session['sender'] = sender;
 	# 	cherrypy.session['message'] = message;
 	# 	Database.ExtractMessage(sender,destination,message,stamp)
@@ -222,21 +232,20 @@ class MainApp(object):
 
 
 def runMainApp():
-	print 'hi'
 	#Setup CSS
-
-	# conf = {
-	#     '/static':{
-	#         'tools.staticdir.on': True,
-	#         'tools.staticdir.dir': os.path.abspath(os.getcwd())
-	#     }
-	#}
-
-
-
+	conf = {
+		'/':{
+			'tools.sessions.on': True,
+			'tools.staticdir.root':os.path.abspath(os.getcwd())
+		},
+		'/static':{
+			'tools.staticdir.on': True,
+			'tools.staticdir.dir': './static'
+		}
+	}
 
 	# Create an instance of MainApp and tell Cherrypy to send all requests under / to it. (ie all of them)
-	cherrypy.tree.mount(MainApp(), "/")
+	cherrypy.tree.mount(MainApp(), "/",conf)
 
 	# Tell Cherrypy to listen for connections on the configured address and port.
 	cherrypy.config.update({'server.socket_host': listen_ip,

@@ -1,0 +1,24 @@
+body{
+    background-image: url(https://c.pxhere.com/photos/0c/ff/beautiful_night_blue_dark_round_light_bright_colorful-553271.jpg!d);
+    background-repeat: no-repeat;
+    color: White
+
+}
+
+#File{
+
+}
+
+#Heading{
+
+    text-align: center;
+    padding: 25px;
+}
+
+#Content{
+    margin: auto;
+    width: 50%;
+    height: 60%;
+    border: 10px solid black;
+    padding: 15px;
+}

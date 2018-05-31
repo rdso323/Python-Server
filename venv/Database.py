@@ -4,17 +4,20 @@ def StoreUsers(username,ip,location,lastLogin,port):
     connection = sqlite3.connect("StoreUsers.db")
     cursor = connection.cursor()
 
-    cursor.execute("DELETE FROM OnlineUsers")           #Delete previous entries each time
 
     sql_command = """
     CREATE TABLE IF NOT EXISTS OnlineUsers ( 
     UPI TEXT, 
     IP  TEXT, 
-    Location INT, 
-    Port INT, 
-    Last_Login INT);"""
+    Location TEXT, 
+    Port TEXT, 
+    Last_Login TEXT);"""
 
     cursor.execute(sql_command)
+
+    cursor.execute("DELETE FROM OnlineUsers")  # Delete previous entries each time
+
+
 
     cursor = connection.cursor()
 
@@ -88,3 +91,25 @@ def ExtractMessage(sender,destination,message,stamp):
     connection.commit()
 
     connection.close()
+
+
+def ExtractPort(ID):
+    connection = sqlite3.connect("StoreUsers.db")
+    cursor = connection.cursor()
+
+    cursor.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
+    user = cursor.fetchone()
+    user = ''.join(user)
+    print user
+    return user
+
+
+def ExtractIP(ID):
+    connection = sqlite3.connect("StoreUsers.db")
+    cursor = connection.cursor()
+
+    cursor.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
+    user = cursor.fetchone()
+    user = ''.join(user)
+    print user
+    return user
