@@ -61,23 +61,27 @@ def ExtractMessage(sender,destination,message,stamp):
     sql_command = """
        CREATE TABLE IF NOT EXISTS Messages ( 
        Sender TEXT, 
-       Destination, TEXT,
+       Destination TEXT,
        Message  TEXT,
-       Time_Stamp);"""
+       Time_Stamp TEXT);"""
 
     cursor.execute(sql_command)
 
     cursor = connection.cursor()
 
     # print(input_data)
-    user_data = [(sender, destination, message, stamp)]
+    # user_data = [(sender, destination, message, stamp)]
+    #
+    #
+    # format_str = """INSERT INTO OnlineUsers (Sender,Destination,Message,Time_Stamp)
+    #     VALUES ("{Sender}", "{Destination}", "{Message}", "{Time_Stamp}");"""
+    #
+    # sql_command = format_str.format(sender, destination, message, stamp)
+    # cursor.execute(sql_command)
 
-    for p in user_data:
-        format_str = """INSERT INTO OnlineUsers (Sender,Destination,Message,Time_Stamp) 
-           VALUES ("{Sender}", "{Destination}", "{Message}", "{Time_Stamp}");"""
-
-        sql_command = format_str.format(sender=p[0], destination=p[1], message=p[2], stamp=p[3])
-        cursor.execute(sql_command)
+    cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp)
+                      VALUES(?,?,?,?)''', (sender, destination, message, stamp))
+    print('First user inserted')
 
     # print(res)
     # never forget this, if you want the changes to be saved:

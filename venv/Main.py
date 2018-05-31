@@ -27,9 +27,10 @@ import Database
 # The address we listen for connections on
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
-listen_ip = (s.getsockname()[0])			#Attain IP
+ip = (s.getsockname()[0])			#Attain IP
 s.close()
 
+listen_ip = '0.0.0.0'
 listen_port = 10007
 
 class MainApp(object):
@@ -156,9 +157,9 @@ class MainApp(object):
 		print password
 		if (username.lower() == "rdso323") and (password.lower() == "remainnail"):
 			password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
-			if(listen_ip.count('10.103')>0):
+			if(ip.count('10.103')>0):
 				location = 0
-			elif(listen_ip.count('172.2')>0):
+			elif(ip.count('172.2')>0):
 				location = 1
 			else:
 				location = 2
@@ -168,7 +169,7 @@ class MainApp(object):
 			values = {'username' : username,
 				'password' : password_hash,
 				'location' : location,
-				'ip' : listen_ip,	#'10.0.2.15',
+				'ip' : ip,	#'10.0.2.15',
 				'port' : listen_port,
 				'enc' : '0'}
 			print(location)
@@ -198,7 +199,8 @@ class MainApp(object):
 		output = {"sender":sender,"destination":destination,
 				  "message":message,"stamp":stamp}
 		data = json.dumps(output)
-		return output
+
+		return data
 	# 	cherrypy.session['sender'] = sender;
 	# 	cherrypy.session['message'] = message;
 	# 	Database.ExtractMessage(sender,destination,message,stamp)
@@ -209,15 +211,30 @@ class MainApp(object):
 	def receiveMessage(self):
 		input_data = cherrypy.request.json
 		print input_data
-		print 'Message working'
+
+		Database.ExtractMessage(input_data['sender'],input_data['destination'],input_data['message'],input_data['stamp'])
 		return '0'
 
-	@cherrypy.expose
-	def getProfile(self):
-		'hi'
+
+	# @cherrypy.expose
+	# def getProfile(self):
+
 
 
 def runMainApp():
+	print 'hi'
+	#Setup CSS
+
+	# conf = {
+	#     '/static':{
+	#         'tools.staticdir.on': True,
+	#         'tools.staticdir.dir': os.path.abspath(os.getcwd())
+	#     }
+	#}
+
+
+
+
 	# Create an instance of MainApp and tell Cherrypy to send all requests under / to it. (ie all of them)
 	cherrypy.tree.mount(MainApp(), "/")
 
