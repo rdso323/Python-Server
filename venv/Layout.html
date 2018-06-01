@@ -12,9 +12,11 @@
         </div>
         <div id = "Content">
             <form action="/signin" method="post" enctype="multipart/form-data">
-                Username: <input type="text" name="username"/><br>
-                Password:&nbsp <input type="password" name="password"/><br><br>
-                <input type="submit" value="Login"/></form>
+                <h1 class="title">Username:</h1>
+                <input class="textbox" type="text" placeholder="Enter Username" name='username' required><br/>
+                <h1 class="title">Password:</h1>
+                <input class="textbox" type="password" placeholder="Enter Password" name='password' required><br/>
+                <input class="loginBtn" type="submit" value="Login"/></form>
         </div>
     </div>
 </body>

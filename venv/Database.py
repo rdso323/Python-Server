@@ -100,7 +100,6 @@ def ExtractPort(ID):
     cursor.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = cursor.fetchone()
     user = ''.join(user)
-    print user
     return user
 
 
@@ -111,5 +110,4 @@ def ExtractIP(ID):
     cursor.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = cursor.fetchone()
     user = ''.join(user)
-    print user
     return user

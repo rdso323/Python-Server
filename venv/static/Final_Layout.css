@@ -1,5 +1,5 @@
 body{
-    background-image: url(https://c.pxhere.com/photos/0c/ff/beautiful_night_blue_dark_round_light_bright_colorful-553271.jpg!d);
+    background-image: url(https://images.pexels.com/photos/8101/sea-sky-sunset-water.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
     background-repeat: no-repeat;
     color: White
 
@@ -16,9 +16,29 @@ body{
 }
 
 #Content{
+
     margin: auto;
-    width: 50%;
-    height: 60%;
-    border: 10px solid black;
+    width: 400px;
+    height: 500px;
+    border-radius: 20px;
     padding: 15px;
+    background: rgb(0,0,0,0.5);
+}
+.title{
+}
+
+.textbox{
+    outline: none;
+    border: none;
+    border-bottom: 2px solid #fff;
+    background: transparent;
+
+}
+
+.loginBtn{
+    background-color: rgb(31,158,216);
+    border: none;
+    padding: 10px 32px;
+    margin-top: 10px;
+
 }
