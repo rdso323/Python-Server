@@ -52,12 +52,12 @@ def ExtractUsers():
     res = cursor.fetchall()
     for i in range (0,len(res)):
         Users.append(res[i][0])
-        print res[i][0]
+        #print res[i][0]
 
     return ', '.join(Users)     #Convert list into a string
 
 
-def ExtractMessage(sender,destination,message,stamp):
+def StoreMessage(sender,destination,message,stamp):
     connection = sqlite3.connect("StoreMessages.db")
     cursor = connection.cursor()
 
@@ -88,6 +88,32 @@ def ExtractMessage(sender,destination,message,stamp):
 
     # print(res)
     # never forget this, if you want the changes to be saved:
+    connection.commit()
+
+    connection.close()
+
+def StoreFile(sender,destination,file,filename,content_type,stamp):
+    connection = sqlite3.connect("StoreMessages.db")
+    cursor = connection.cursor()
+
+    sql_command = """
+       CREATE TABLE IF NOT EXISTS Files ( 
+       Sender TEXT, 
+       Destination TEXT,
+       File  TEXT,
+       Filename TEXT,
+       Content_Type TEXT,
+       Time_Stamp TEXT);"""
+
+    cursor.execute(sql_command)
+
+    cursor = connection.cursor()
+
+    cursor.execute('''INSERT INTO Files(Sender, Destination, File, Filename,Content_Type
+                    ,Time_Stamp)
+                VALUES(?,?,?,?)''', (sender, destination, file, filename, content_type, stamp))
+    print('File inserted')
+
     connection.commit()
 
     connection.close()

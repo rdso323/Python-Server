@@ -1,30 +1,42 @@
 body{
-    background-image: url(https://images.pexels.com/photos/8101/sea-sky-sunset-water.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940);
+    background-image: url(sea-sky-sunset-water.jpg);
     background-repeat: no-repeat;
+    background-position: center;
+    font-family: Ariel;
     color: White
-
 }
 
 #File{
-
 }
 
-#Heading{
 
+
+#Heading{
     text-align: center;
-    padding: 25px;
+    font-size: 20px;
+    padding: 20px 0px 50px 0px;
 }
 
 #Content{
-
     margin: auto;
-    width: 400px;
-    height: 500px;
+    width: 300px;
+    height: 350px;
     border-radius: 20px;
-    padding: 15px;
+    padding: 20px 15px;
     background: rgb(0,0,0,0.5);
 }
+
 .title{
+    text-align: center;
+}
+
+.avatar{
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    position: absolute;
+    left: 350px;
+    top: 135px;
 }
 
 .textbox{
@@ -32,13 +44,17 @@ body{
     border: none;
     border-bottom: 2px solid #fff;
     background: transparent;
-
+    font-size: 16px;
+    color: white;
+    width: 100%;
+    margin-bottom: 30px;
 }
 
+
 .loginBtn{
-    background-color: rgb(31,158,216);
+    background-color: #b3e6ff;
     border: none;
     padding: 10px 32px;
-    margin-top: 10px;
+    margin-top: 40px;
 
 }
