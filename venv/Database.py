@@ -1,7 +1,7 @@
 import sqlite3
 
 def StoreUsers(username,ip,location,lastLogin,port):
-    connection = sqlite3.connect("StoreUsers.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
 
@@ -46,10 +46,11 @@ def StoreUsers(username,ip,location,lastLogin,port):
 
 def ExtractUsers():
     Users = []
-    connection = sqlite3.connect("StoreUsers.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM OnlineUsers")
     res = cursor.fetchall()
+    connection.close()
     for i in range (0,len(res)):
         Users.append(res[i][0])
         #print res[i][0]
@@ -58,7 +59,7 @@ def ExtractUsers():
 
 
 def StoreMessage(sender,destination,message,stamp):
-    connection = sqlite3.connect("StoreMessages.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
     sql_command = """
@@ -84,7 +85,7 @@ def StoreMessage(sender,destination,message,stamp):
 
     cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp)
                       VALUES(?,?,?,?)''', (sender, destination, message, stamp))
-    print('First user inserted')
+    print('User inserted')
 
     # print(res)
     # never forget this, if you want the changes to be saved:
@@ -93,7 +94,7 @@ def StoreMessage(sender,destination,message,stamp):
     connection.close()
 
 def StoreFile(sender,destination,file,filename,content_type,stamp):
-    connection = sqlite3.connect("StoreMessages.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
     sql_command = """
@@ -111,7 +112,7 @@ def StoreFile(sender,destination,file,filename,content_type,stamp):
 
     cursor.execute('''INSERT INTO Files(Sender, Destination, File, Filename,Content_Type
                     ,Time_Stamp)
-                VALUES(?,?,?,?)''', (sender, destination, file, filename, content_type, stamp))
+                VALUES(?,?,?,?,?,?)''', (sender, destination, file, filename, content_type, stamp))
     print('File inserted')
 
     connection.commit()
@@ -120,20 +121,52 @@ def StoreFile(sender,destination,file,filename,content_type,stamp):
 
 
 def ExtractPort(ID):
-    connection = sqlite3.connect("StoreUsers.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
     cursor.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = cursor.fetchone()
+    connection.close()
     user = ''.join(user)
     return user
 
 
 def ExtractIP(ID):
-    connection = sqlite3.connect("StoreUsers.db")
+    connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
     cursor.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = cursor.fetchone()
+    connection.close()
     user = ''.join(user)
     return user
+
+
+
+def StoreProfile(timestamp,Name,Position,Location):
+
+    connection = sqlite3.connect("Database.db")
+
+    cursor = connection.cursor()
+
+    sql_command = """
+           CREATE TABLE IF NOT EXISTS Profile ( 
+           Name TEXT, 
+           Position TEXT,
+           Location  TEXT,
+           LastUpdated TEXT);"""
+
+    cursor.execute(sql_command)
+
+    cursor.execute("DELETE FROM Profile")  # Delete previous entries each time
+
+    cursor = connection.cursor()
+
+    cursor.execute('''INSERT INTO Profile(Name, Position, Location, LastUpdated)
+                     VALUES(?,?,?,?)''',(Name, Position, Location, timestamp))
+
+    print('Details inserted')
+
+    connection.commit()
+
+    connection.close()

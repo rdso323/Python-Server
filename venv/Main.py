@@ -61,10 +61,11 @@ class MainApp(object):
             Page += "Here is some bonus text because you've logged in! <br/><br/>"
             Page += "Online Users:<br/>"
             Page += self.UserDisplay()
-            Page += "<br/><br/>Click here to <a href='signout'>Logout</a>."
-            Page += "<br/>Click here to <a href='composeMessage'>send messages</a>"
+            Page += "<br/><br/>Click here to <a href='composeMessage'>send messages</a>"
             Page += "<br/>Click here to <a href='composeFile'>send files</a>"
-            Page += "<br/>Click here to edit <a href='Profile'>Profile</a>"
+            Page += "<br/>Click here to edit <a href='EditProfile'>Profile</a>"
+            Page += "<br/><br/>Click here to view <a href='InputProfile'>Profiles</a>"
+            Page += "<br/>Click here to <a href='signout'>Logout</a>."
             self.TracktoMain()  # Prevent timing out
         except KeyError: #There is no username
             Page += "Click here to <a href='login'>Login</a>."
@@ -73,9 +74,10 @@ class MainApp(object):
 
     @cherrypy.expose
     def TracktoMain(self):          #Prevent timing out
-        respdata = urllib2.urlopen(Login_url).read()
-        print(respdata)
-        threading.Timer(10, self.TracktoMain).start()
+        if(LogIn == 1):             #Ensure user can't stay logged in once logged out
+            respdata = urllib2.urlopen(Login_url).read()
+            print(respdata)
+            threading.Timer(20, self.TracktoMain).start()
 
     @cherrypy.expose
     def BackToMain(self,fname,lname,DOB,degree):
@@ -91,7 +93,7 @@ class MainApp(object):
         # Page += 'Username: <input type="text" name="username"/><br/>'
         # Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
         # Page += '<input type="submit" value="Login"/></form>'
-        Page = file('Layout.html')
+        Page = file('SignIn.html')
         return Page
 
     @cherrypy.expose			#Display users online
@@ -143,6 +145,8 @@ class MainApp(object):
         """Check their name and password and send them either to the main page, or back to the main login screen."""
         error = self.authoriseUserLogin(username,password)
         if (error == 0):
+            global LogIn
+            LogIn = 1
             cherrypy.session['username'] = username;
             cherrypy.session['password'] = password;
             raise cherrypy.HTTPRedirect('/')
@@ -169,6 +173,8 @@ class MainApp(object):
             data = urllib.urlencode(values)  # Set values in dictionary together (Seperated with &)
             respdata = urllib2.urlopen(url + data).read()
             cherrypy.lib.sessions.expire()
+        global LogIn
+        LogIn = 0
         raise cherrypy.HTTPRedirect('/')
 
     def authoriseUserLogin(self, username, password):
@@ -251,8 +257,8 @@ class MainApp(object):
     @cherrypy.expose
     @cherrypy.tools.json_in()
     def receiveFile(self):
+        print 'File Received'
         input_data = cherrypy.request.json
-        print input_data
         Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],
                         input_data['filename'], input_data['content_type'], input_data['stamp'])
 
@@ -264,18 +270,21 @@ class MainApp(object):
 
     @cherrypy.expose
     def sendFile(self,UPI,File):
-        print File
         filename = File
         with open(File, "rb") as image_file:
             file = base64.b64encode(image_file.read())
-        output = {"sender":cherrypy.session['username'],"destination":UPI,
-                  "file":file,"filename":filename,"content_type":'image/jpg',"stamp":time.time()}
+        output = {"sender":cherrypy.session.get('username'),"destination":UPI,
+                  "file":file,"filename":filename,"content_type":'image/jpeg',"stamp":time.time()}
+        Database.StoreFile(output['sender'], output['destination'], output['file'],
+                           output['filename'], output['content_type'], output['stamp'])
         data = json.dumps(output)
         IP = Database.ExtractIP(UPI)
         Port = Database.ExtractPort(UPI)
+        print data
 
-        URL = 'http://' + IP + ':' + Port+ '/receiveFile'
-        
+        URL = 'http://' + IP + ':' + Port + '/receiveFile'
+        print URL
+
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
         response = urllib2.urlopen(req)
         return response
@@ -284,16 +293,49 @@ class MainApp(object):
         # Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],
         #                         input_data['filename'], input_data['content_type'], input_data['stamp'])
 
+
     @cherrypy.expose
-    def Profile(self):
-        Page = file('Profile.html')
+    def InputProfile(self):
+        Page = file('GetProfile.html')
         return Page
 
+    @cherrypy.expose
+    def CallProfile(self,UPI):
+        output = {"profile_username": UPI,
+                  "sender": cherrypy.session['username']}
+        data = json.dumps(output)
+        IP = Database.ExtractIP(UPI)
+        Port = Database.ExtractPort(UPI)
+
+        URL = 'http://' + IP + ':' + Port+ '/getProfile'
+
+        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
+        response = urllib2.urlopen(req)
+        return response
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    def getProfile(self):
+        output = {"lastupdated": time.time(), "fullname": 'Rohan Joseph D\'Souza',
+                  "position": 'Your Boss', "location": 'Your mums house'}
+
+        data = json.dumps(output)
+        return data
+
 
 
     @cherrypy.expose
-    def getProfile(self,sender,profile_username):
-        return time.time()
+    def EditProfile(self):
+        Page = file('EditProfile.html')
+        return Page
+
+    @cherrypy.expose
+    def SaveProfile(self,Position,Name,Location):
+        Database.StoreProfile(time.time(),Name,Position,Location)
+        return 'Details Updated'
+
+    #@cherrypy.expose
+    #def SaveProfile(self):
 
 
 def runMainApp():

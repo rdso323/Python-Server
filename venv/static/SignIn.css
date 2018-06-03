@@ -31,12 +31,12 @@ body{
 }
 
 .avatar{
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     position: absolute;
-    left: 350px;
-    top: 135px;
+    left: 46%;
+    top: 17%;
 }
 
 .textbox{
@@ -48,6 +48,11 @@ body{
     color: white;
     width: 100%;
     margin-bottom: 30px;
+}
+
+::placeholder{
+    color: #f7fbff;
+    opacity: 0.4;
 }
 
 
