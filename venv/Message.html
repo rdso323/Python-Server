@@ -11,5 +11,10 @@
         <h3 class="title">Message:</h3>
         <input class="textbox" type="text" placeholder="Enter Message" name='Message' required><br/>
         <br/><br/><input class="loginBtn" type="submit" value="Submit"/></form>
+
+    <h3 class = Messages><br/><br/>Previous Messages (Sender:Destination:Message):</h3>
+    {% for T in Messages %}
+        <li>{{T}}</li>
+    {% endfor %}
 </body>
 </html>

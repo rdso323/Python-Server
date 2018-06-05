@@ -3,14 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="static/Main_Screen.css" />
+    <script>
+    <!--
+    function timedRefresh(timeoutPeriod) {
+        setTimeout("location.reload(true);",timeoutPeriod);
+    }
+
+    window.onload = timedRefresh(15000);
+
+    //   -->
+    </script>
 </head>
 <body>
-"Here is some bonus text because you've logged in! <br/><br/>"
-"Online Users:<br/>"
-self.UserDisplay()
- "<br/><br/>Click here to <a href='signout'>Logout</a>."
-"<br/>Click here to <a href='sendMessage'>send message</a>"
- "<br/>Click here to edit <a href='Profile'>Profile</a>"
+
+    <div class="topnav">
+        <a class="active" href='signout'>Logout</a>
+        <a href='composeMessage'>Messages</a>
+        <a href='composeFile'>Files</a>
+        <a href="InputProfile">Profiles</a>
+    </div>
+    <h1 class="Heading">Hello {{username}}!</h1>
+    <b>Here is some bonus content because you've logged in!</b> <br/><br/>
+
+    <!--{{Users}}-->
+
+    <div class = "Users">
+        <h4>Online Users:</h4>
+        <list class="u1">
+            {% for T in Users %}
+                <li>{{T}}</li>
+            {% endfor %}</h3>
+        </list>
+    </div>
+    <!--<br/><br/>Click here to <a href='composeMessage'>send messages</a>-->
+    <!--<br/>Click here to <a href='composeFile'>send files</a>-->
+    <!--<br/>Click here to view <a href='InputProfile'>Profiles</a>-->
+    <!--<br/><br/>Click here to edit <a href='EditProfile'>Profile</a>-->
+    <!--<br/>Click here to <a href='signout'>Logout</a>-->
 </body>
 
 </html>

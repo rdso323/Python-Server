@@ -9,5 +9,20 @@
         <h3 class="title">Desired User:</h3>
         <input class="textbox" type="text" placeholder="Enter Target UPI" name='UPI' required><br/>
         <br/><br/><input class="loginBtn" type="submit" value="Submit"/></form>
+
+
+    <br/><br/><br/><br/>
+    <div id="File">
+        <div id="Heading">
+            <h2>Edit Profile below</h2>
+        </div>
+        <div id = "Content">
+            <form action="/SaveProfile" method="post" enctype="multipart/form-data">
+                Name:<br/> <input type="text" placeholder="Enter Your Full Name" name='Name'required><br/>
+                Position:<br/> <input type="text" placeholder="Enter Your Position" name='Position' required><br/>
+                Location:<br/> <input type="text" placeholder="Enter Your Current City" name='Location' required><br/>
+                <br/><input type="submit" value="Submit"/></form>
+        </div>
+    </div>
 </body>
 </html>

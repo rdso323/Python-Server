@@ -55,7 +55,7 @@ def ExtractUsers():
         Users.append(res[i][0])
         #print res[i][0]
 
-    return ', '.join(Users)     #Convert list into a string
+    return Users
 
 
 def StoreMessage(sender,destination,message,stamp):
@@ -170,3 +170,57 @@ def StoreProfile(timestamp,Name,Position,Location):
     connection.commit()
 
     connection.close()
+
+
+def ExtractProfile():
+    connection = sqlite3.connect("Database.db")
+    cursor = connection.cursor()
+
+    cursor.execute('''SELECT Name FROM Profile ''')     #Retrieve required tuples
+    Name = cursor.fetchall()
+    cursor.execute('''SELECT Position FROM Profile ''')
+    Position = cursor.fetchall()
+    cursor.execute('''SELECT Location FROM Profile ''')
+    Location = cursor.fetchall()
+    cursor.execute('''SELECT LastUpdated FROM Profile ''')
+    LastUpdated = cursor.fetchall()
+
+    connection.close()
+    user = dict([("lastUpdated",''.join(LastUpdated[0])),("fullname",''.join(Name[0])), #Convert tuples into one dictionary
+                  ("position",''.join(Position[0])),("location", ''.join(Location[0]))])
+    return user
+
+
+def ExtractMessages():                 #Extract & display last 15 messages
+    Messages = []
+    connection = sqlite3.connect("Database.db")
+    cursor = connection.cursor()
+    cursor.execute('''SELECT Sender, Destination, Message FROM Messages''')
+    res = cursor.fetchall()
+    connection.close()
+    if(len(res)>15):
+        length = 15
+    else:
+        length = len(res)
+    for i in range (0,length):
+        Messages.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1]
+                        + " : " + res[len(res) - i - 1][2])
+    print Messages
+    return Messages
+
+def ExtractFiles():
+    Files = []                                      #Extract & display last 5 files
+    connection = sqlite3.connect("Database.db")
+    cursor = connection.cursor()
+    cursor.execute('''SELECT Sender, Destination, Filename FROM Files''')
+    res = cursor.fetchall()
+    connection.close()
+    if(len(res)>5):
+        length = 5
+    else:
+        length = len(res)
+    for i in range (0,length):
+        Files.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1] + " : " +
+                     res[len(res) - i - 1][2])
+    print Files
+    return Files

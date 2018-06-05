@@ -35,8 +35,9 @@ body{
     height: 70px;
     border-radius: 50%;
     position: absolute;
-    left: 46%;
-    top: 17%;
+    top: 123px;
+    left: calc(50% - 35px);
+
 }
 
 .textbox{

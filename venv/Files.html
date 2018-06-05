@@ -11,5 +11,10 @@
         <h3 class="title">Select File:</h3>
         <input class="textbox" type="file" name='File' accept="file_extension|audio/*|video/*|image/*|media_type" required><br/>
         <br/><br/><input class="loginBtn" type="submit" value="Submit"/></form>
+
+    <h3 class = Files><br/>Previous Files (Sender:Receiver:File):</h3>
+    {% for T in Files %}
+        <li>{{T}}</li>
+    {% endfor %}
 </body>
 </html>

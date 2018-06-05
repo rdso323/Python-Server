@@ -10,8 +10,6 @@
 # Requires:  CherryPy 3.2.2  (www.cherrypy.org)
 #            Python  (We use 2.7)
 
-
-
 import cherrypy
 import urllib
 import urllib2
@@ -23,6 +21,8 @@ import os,os.path
 import base64
 import time
 import threading
+from jinja2 import Environment, FileSystemLoader
+env = Environment(loader=FileSystemLoader(""))
 
 
 
@@ -34,6 +34,7 @@ s.close()
 
 listen_ip = '0.0.0.0'
 listen_port = 10007
+
 
 class MainApp(object):
 
@@ -54,21 +55,24 @@ class MainApp(object):
     # PAGES (which return HTML that can be viewed in browser)
     @cherrypy.expose
     def index(self):
-        Page = "Welcome to the COMPSYS302 Login Page!<br/>"
-
         try:
-            Page += "Hello " + cherrypy.session['username'] + "!<br/>"
-            Page += "Here is some bonus text because you've logged in! <br/><br/>"
-            Page += "Online Users:<br/>"
-            Page += self.UserDisplay()
-            Page += "<br/><br/>Click here to <a href='composeMessage'>send messages</a>"
-            Page += "<br/>Click here to <a href='composeFile'>send files</a>"
-            Page += "<br/>Click here to edit <a href='EditProfile'>Profile</a>"
-            Page += "<br/><br/>Click here to view <a href='InputProfile'>Profiles</a>"
-            Page += "<br/>Click here to <a href='signout'>Logout</a>."
+            username = cherrypy.session['username']
             self.TracktoMain()  # Prevent timing out
+            Users = self.UserDisplay()
+            return env.get_template('Main_Screen.html').render(username=username, Users=Users)
+            # Page = "Hello " + cherrypy.session['username'] + "!<br/'composeMessage'>send messages</a>"
+            #             # Page += "<br/>Click here to <a href='comp>"
+            #             # Page += "Here is some bonus text because you've logg
+            #             #             # Page += self.UserDisplay()
+            #             #             # Page += "<br/><br/>Click here to <a href=oseFile'>send files</a>"
+            #             # Page += "<br/>Click here to view <a href='InputProfileed in! <br/><br/>"
+            # Page += "Online Users:<br/>"'>Profiles</a>"
+            # Page += "<br/><br/>Click here to edit <a href='EditProfile'>Profile</a>"
+            # Page += "<br/>Click here to <a href='signout'>Logout</a>."
+            Page = file('Main_Screen.html')
         except KeyError: #There is no username
-            Page += "Click here to <a href='login'>Login</a>."
+            Page = "Welcome to the COMPSYS302 Login Page!<br/>"
+            Page += "Click here to <a href='login'>Login</a>"
         print 'timer working'
         return Page
 
@@ -77,7 +81,7 @@ class MainApp(object):
         if(LogIn == 1):             #Ensure user can't stay logged in once logged out
             respdata = urllib2.urlopen(Login_url).read()
             print(respdata)
-            threading.Timer(20, self.TracktoMain).start()
+            threading.Timer(30, self.TracktoMain).start()
 
     @cherrypy.expose
     def BackToMain(self,fname,lname,DOB,degree):
@@ -122,16 +126,9 @@ class MainApp(object):
             lastLogin.append(input_data[str(x)]['lastLogin'])
             port.append(input_data[str(x)]['port'])
 
-
-        #for x in range(0, len(username)):
-            #print username[x]
-            # print ip[x]
-            # print location[x]
-            # print lastLogin[x]
-            # print port[x]
-
         Database.StoreUsers(username,ip,location,lastLogin,port)
         Users = Database.ExtractUsers()
+        print Users
         return Users
 
     @cherrypy.expose
@@ -218,11 +215,15 @@ class MainApp(object):
 
     @cherrypy.expose
     def composeMessage(self):
+        Messages = Database.ExtractMessages()
+        return env.get_template('Message.html').render(Messages=Messages)
         Page = file('Message.html')
         return Page
 
     @cherrypy.expose
     def composeFile(self):
+        Files = Database.ExtractFiles()
+        return env.get_template('Files.html').render(Files=Files)
         Page = file('Files.html')
         return Page
 
@@ -231,8 +232,7 @@ class MainApp(object):
     def sendMessage(self,UPI,Message):
         output = {"sender":cherrypy.session['username'],"destination":UPI,
                   "message":Message,"stamp":time.time()}
-        Database.StoreMessage(output['sender'], output['destination'], output['message'],
-                                output['stamp'])
+
         data = json.dumps(output)
         IP = Database.ExtractIP(UPI)
         Port = Database.ExtractPort(UPI)
@@ -241,6 +241,8 @@ class MainApp(object):
 
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
         response = urllib2.urlopen(req)
+        Database.StoreMessage(output['sender'], output['destination'], output['message'],
+                              output['stamp'])
         return response
     # 	cherrypy.session['sender'] = sender;
     # 	cherrypy.session['message'] = message;
@@ -316,18 +318,12 @@ class MainApp(object):
     @cherrypy.expose
     @cherrypy.tools.json_in()
     def getProfile(self):
-        output = {"lastupdated": time.time(), "fullname": 'Rohan Joseph D\'Souza',
-                  "position": 'Your Boss', "location": 'Your mums house'}
-
+        # output = {"lastupdated": time.time(), "fullname": 'Rohan Joseph D\'Souza',
+        #           "position": 'Your Boss', "location": 'Your mums house'}
+        output = Database.ExtractProfile()
         data = json.dumps(output)
         return data
 
-
-
-    @cherrypy.expose
-    def EditProfile(self):
-        Page = file('EditProfile.html')
-        return Page
 
     @cherrypy.expose
     def SaveProfile(self,Position,Name,Location):
