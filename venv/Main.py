@@ -77,7 +77,6 @@ class MainApp(object):
         except KeyError: #There is no username
             Page = "Welcome to the COMPSYS302 Login Page!<br/>"
             Page += "Click here to <a href='login'>Login</a>"
-        print 'timer working'
         return Page
 
     @cherrypy.expose
@@ -132,7 +131,6 @@ class MainApp(object):
 
         Database.StoreUsers(username,ip,location,lastLogin,port)
         Users = Database.ExtractUsers()
-        print Users
         return Users
 
     @cherrypy.expose
@@ -201,7 +199,6 @@ class MainApp(object):
             global Login_url
             Login_url = url + data
             respdata = urllib2.urlopen(url+data).read()
-            #print(respdata)
             if(respdata.count('0')>=1):
                 return 0
             elif(respdata.count('1')>=0):
@@ -345,8 +342,10 @@ class MainApp(object):
         URL = 'http://' + IP + ':' + Port+ '/getProfile'
 
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req)
-        return response
+        response = urllib2.urlopen(req).read()
+        print response
+        Response = response['fullname']
+        return Response
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
