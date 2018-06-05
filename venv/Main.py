@@ -23,7 +23,8 @@ import time
 import threading
 from jinja2 import Environment, FileSystemLoader
 env = Environment(loader=FileSystemLoader(""))
-
+global count
+count = 0
 
 
 # The address we listen for connections on
@@ -57,7 +58,10 @@ class MainApp(object):
     def index(self):
         try:
             username = cherrypy.session['username']
-            self.TracktoMain()  # Prevent timing out
+            if(count==0):
+                self.TracktoMain()  # Prevent timing out
+                global count
+                count = 1
             Users = self.UserDisplay()
             return env.get_template('Main_Screen.html').render(username=username, Users=Users)
             # Page = "Hello " + cherrypy.session['username'] + "!<br/'composeMessage'>send messages</a>"
@@ -234,16 +238,30 @@ class MainApp(object):
                   "message":Message,"stamp":time.time()}
 
         data = json.dumps(output)
-        IP = Database.ExtractIP(UPI)
-        Port = Database.ExtractPort(UPI)
+        try:
+            IP = Database.ExtractIP(UPI)
+            Port = Database.ExtractPort(UPI)
+        except:
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],
+                                  output['stamp'], "Failed")
+            return "Database error"
 
-        URL = 'http://' + IP + ':' + Port+ '/receiveMessage'
+        URL = 'http://' + IP + ':' + Port + '/receiveMessage'
 
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req)
-        Database.StoreMessage(output['sender'], output['destination'], output['message'],
-                              output['stamp'])
+        response = urllib2.urlopen(req).read()
+
+        if (response.count('0') >= 1):
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],
+                            output['stamp'], "Delivered")
+        else:
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],
+                                  output['stamp'], "Failed")
+            return "Delivery Failed"
+
         return response
+
+
     # 	cherrypy.session['sender'] = sender;
     # 	cherrypy.session['message'] = message;
     # 	Database.ExtractMessage(sender,destination,message,stamp)
@@ -253,7 +271,7 @@ class MainApp(object):
     @cherrypy.tools.json_in()
     def receiveMessage(self):
         input_data = cherrypy.request.json
-        Database.StoreMessage(input_data['sender'],input_data['destination'],input_data['message'],input_data['stamp'])
+        Database.StoreMessage(input_data['sender'],input_data['destination'],input_data['message'],input_data['stamp'],"Received")
         return '0'
 
     @cherrypy.expose
@@ -262,7 +280,8 @@ class MainApp(object):
         print 'File Received'
         input_data = cherrypy.request.json
         Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],
-                        input_data['filename'], input_data['content_type'], input_data['stamp'])
+                        input_data['filename'], input_data['content_type'], input_data['stamp'],
+                           "Received")
 
         file = base64.b64decode(input_data['file'])
         filename = input_data['filename']
@@ -277,23 +296,37 @@ class MainApp(object):
             file = base64.b64encode(image_file.read())
         output = {"sender":cherrypy.session.get('username'),"destination":UPI,
                   "file":file,"filename":filename,"content_type":'image/jpeg',"stamp":time.time()}
-        Database.StoreFile(output['sender'], output['destination'], output['file'],
-                           output['filename'], output['content_type'], output['stamp'])
         data = json.dumps(output)
-        IP = Database.ExtractIP(UPI)
-        Port = Database.ExtractPort(UPI)
-        print data
+
+        try:
+            IP = Database.ExtractIP(UPI)
+            Port = Database.ExtractPort(UPI)
+        except:
+            Database.StoreFile(output['sender'], output['destination'], output['file'],
+                               output['filename'], output['content_type'], output['stamp'],
+                               "Failed")
+            return "Database error"
+
+        #print data
 
         URL = 'http://' + IP + ':' + Port + '/receiveFile'
         print URL
 
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req)
+        response = urllib2.urlopen(req).read()
+
+        if (response.count('0') >= 1):
+            Database.StoreFile(output['sender'], output['destination'], output['file'],
+                               output['filename'], output['content_type'], output['stamp'],
+                               "Delivered")
+        else:
+            Database.StoreFile(output['sender'], output['destination'], output['file'],
+                               output['filename'], output['content_type'], output['stamp'],
+                               "Failed")
+            return "Delivery Failed"
+
+
         return response
-
-
-        # Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],
-        #                         input_data['filename'], input_data['content_type'], input_data['stamp'])
 
 
     @cherrypy.expose
@@ -318,8 +351,6 @@ class MainApp(object):
     @cherrypy.expose
     @cherrypy.tools.json_in()
     def getProfile(self):
-        # output = {"lastupdated": time.time(), "fullname": 'Rohan Joseph D\'Souza',
-        #           "position": 'Your Boss', "location": 'Your mums house'}
         output = Database.ExtractProfile()
         data = json.dumps(output)
         return data
@@ -339,7 +370,9 @@ def runMainApp():
     conf = {
         '/':{
             'tools.sessions.on': True,
-            'tools.staticdir.root':os.path.abspath(os.getcwd())
+            'tools.staticdir.root':os.path.abspath(os.getcwd()),
+            'tools.encode.on': True,
+            'tools.encode.encoding': 'utf-8',
         },
         '/static':{
             'tools.staticdir.on': True,

@@ -31,14 +31,7 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/*list.u1{
-    list-style-type: square;
-}
 
-list > li{
-   color: green;
-   margin-right: 80%;
-}*/
 
 list {
     list-style: none; /* Remove list bullets */
@@ -46,11 +39,11 @@ list {
     margin: 0;
 }
 
-li {
+c {
     padding-left: 5px;
 }
 
-li:before {
+c:before {
     content: "•"; /* Insert content that looks like bullets */
     padding-right: 8px;
     color: green; /* Or a color you prefer */

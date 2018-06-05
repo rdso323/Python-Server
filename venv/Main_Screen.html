@@ -10,7 +10,7 @@
         setTimeout("location.reload(true);",timeoutPeriod);
     }
 
-    window.onload = timedRefresh(15000);
+    window.onload = timedRefresh(20000);
 
     //   -->
     </script>
@@ -28,12 +28,12 @@
 
     <!--{{Users}}-->
 
-    <div class = "Users">
+    <list class = "Users">
         <h4>Online Users:</h4>
-        <list class="u1">
+        <list>
             {% for T in Users %}
-                <li>{{T}}</li>
-            {% endfor %}</h3>
+            <c>{{T}}</c>
+            {% endfor %}
         </list>
     </div>
     <!--<br/><br/>Click here to <a href='composeMessage'>send messages</a>-->

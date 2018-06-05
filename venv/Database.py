@@ -58,7 +58,7 @@ def ExtractUsers():
     return Users
 
 
-def StoreMessage(sender,destination,message,stamp):
+def StoreMessage(sender,destination,message,stamp,status):
     connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
@@ -67,7 +67,8 @@ def StoreMessage(sender,destination,message,stamp):
        Sender TEXT, 
        Destination TEXT,
        Message  TEXT,
-       Time_Stamp TEXT);"""
+       Time_Stamp TEXT,
+       Status Text);"""
 
     cursor.execute(sql_command)
 
@@ -83,8 +84,8 @@ def StoreMessage(sender,destination,message,stamp):
     # sql_command = format_str.format(sender, destination, message, stamp)
     # cursor.execute(sql_command)
 
-    cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp)
-                      VALUES(?,?,?,?)''', (sender, destination, message, stamp))
+    cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp, Status)
+                      VALUES(?,?,?,?,?)''', (sender, destination, message, stamp, status))
     print('User inserted')
 
     # print(res)
@@ -93,7 +94,7 @@ def StoreMessage(sender,destination,message,stamp):
 
     connection.close()
 
-def StoreFile(sender,destination,file,filename,content_type,stamp):
+def StoreFile(sender,destination,file,filename,content_type,stamp,status):
     connection = sqlite3.connect("Database.db")
     cursor = connection.cursor()
 
@@ -104,15 +105,16 @@ def StoreFile(sender,destination,file,filename,content_type,stamp):
        File  TEXT,
        Filename TEXT,
        Content_Type TEXT,
-       Time_Stamp TEXT);"""
+       Time_Stamp TEXT,
+       Status TEXT);"""
 
     cursor.execute(sql_command)
 
     cursor = connection.cursor()
 
     cursor.execute('''INSERT INTO Files(Sender, Destination, File, Filename,Content_Type
-                    ,Time_Stamp)
-                VALUES(?,?,?,?,?,?)''', (sender, destination, file, filename, content_type, stamp))
+                    ,Time_Stamp,Status)
+                VALUES(?,?,?,?,?,?,?)''', (sender, destination, file, filename, content_type, stamp, status))
     print('File inserted')
 
     connection.commit()
@@ -122,23 +124,24 @@ def StoreFile(sender,destination,file,filename,content_type,stamp):
 
 def ExtractPort(ID):
     connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
-
-    cursor.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
-    user = cursor.fetchone()
+    fetch = connection.cursor()
+    connection.text_factory = str
+    fetch.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
+    user = fetch.fetchone()[0]
     connection.close()
-    user = ''.join(user)
+    print user
+    #user = ''.join(user)
     return user
 
 
 def ExtractIP(ID):
     connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
-
-    cursor.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
-    user = cursor.fetchone()
+    fetch = connection.cursor()
+    connection.text_factory = str
+    fetch.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
+    user = fetch.fetchone()[0]
     connection.close()
-    user = ''.join(user)
+    print user
     return user
 
 
@@ -192,35 +195,35 @@ def ExtractProfile():
 
 
 def ExtractMessages():                 #Extract & display last 15 messages
-    Messages = []
-    connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
-    cursor.execute('''SELECT Sender, Destination, Message FROM Messages''')
-    res = cursor.fetchall()
-    connection.close()
-    if(len(res)>15):
-        length = 15
-    else:
-        length = len(res)
-    for i in range (0,length):
-        Messages.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1]
-                        + " : " + res[len(res) - i - 1][2])
-    print Messages
-    return Messages
+        Messages = []
+        connection = sqlite3.connect("Database.db")
+        cursor = connection.cursor()
+        cursor.execute('''SELECT Sender, Destination, Message, Status FROM Messages''')
+        res = cursor.fetchall()
+        connection.close()
+        if(len(res)>15):
+            length = 15
+        else:
+            length = len(res)
+        for i in range (0,length):
+            Messages.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1]
+                            + " : " + res[len(res)-i-1][2] + " - " + res[len(res)-i-1][3])
+        print Messages
+        return Messages
 
 def ExtractFiles():
-    Files = []                                      #Extract & display last 5 files
-    connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
-    cursor.execute('''SELECT Sender, Destination, Filename FROM Files''')
-    res = cursor.fetchall()
-    connection.close()
-    if(len(res)>5):
-        length = 5
-    else:
-        length = len(res)
-    for i in range (0,length):
-        Files.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1] + " : " +
-                     res[len(res) - i - 1][2])
-    print Files
-    return Files
+        Files = []                                      #Extract & display last 5 files
+        connection = sqlite3.connect("Database.db")
+        cursor = connection.cursor()
+        cursor.execute('''SELECT Sender, Destination, Filename, Status FROM Files''')
+        res = cursor.fetchall()
+        connection.close()
+        if(len(res)>10):
+            length = 10
+        else:
+            length = len(res)
+        for i in range (0,length):
+            Files.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1] + " : " +
+                         res[len(res)-i-1][2] + " - " + res[len(res)-i-1][3])
+        print Files
+        return Files
