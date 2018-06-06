@@ -59,8 +59,8 @@ class MainApp(object):
     def index(self):
         try:
             username = cherrypy.session['username']
-            if(count==0):
-                self.TracktoMain()  # Prevent timing out
+            if(count==0):                                       #Only for first Login
+                self.TracktoMain()                              # Prevent timing out
                 global count
                 count = 1
             Users = self.UserDisplay()
@@ -72,27 +72,15 @@ class MainApp(object):
         return Page
 
     @cherrypy.expose
-    def TracktoMain(self):          #Prevent timing out
-        if(LogIn == 1):             #Ensure user can't stay logged in once logged out
-            respdata = urllib2.urlopen(Login_url).read()
+    def TracktoMain(self):                                      #Prevent timing out
+        if(LogIn == 1):                                         #Ensure user can't stay logged in once logged out
+            respdata = urllib2.urlopen(Login_url).read()        #Call log in IP
             print(respdata)
-            threading.Timer(30, self.TracktoMain).start()
-
-    @cherrypy.expose
-    def BackToMain(self,fname,lname,DOB,degree):
-        cherrypy.session['fname'] = fname;
-        cherrypy.session['lname'] = lname;
-        cherrypy.session['DOB'] = DOB;
-        cherrypy.session['degree'] = degree;
-        raise cherrypy.HTTPRedirect('/index')
+            threading.Timer(30, self.TracktoMain).start()      #Set timer to call function every 30 seconds
 
     @cherrypy.expose
     def login(self):
-        # Page = '<form action="/signin" method="post" enctype="multipart/form-data">'
-        # Page += 'Username: <input type="text" name="username"/><br/>'
-        # Page += 'Password: &nbsp<input type="password" name="password"/><br/><br/>'
-        # Page += '<input type="submit" value="Login"/></form>'
-        Page = file('SignIn.html')
+        Page = file('SignIn.html')                              #Html for logging in  
         return Page
 
     @cherrypy.expose			#Display users online
@@ -103,30 +91,30 @@ class MainApp(object):
                   'enc': '0',
                   'json': '1'}
 
-        data = urllib.urlencode(values)  # Set values in dictionary together (Seperated with &)
-        respdata = urllib2.urlopen(url + data).read()
+        data = urllib.urlencode(values)                           #Set values in dictionary together (Seperated with &)
+        respdata = urllib2.urlopen(url + data).read()             #Call log in API
         input_data = json.loads(respdata)
 
 
-        username= []					#Create a list
+        username= []					           #Create lists
         ip = []
         location = []
         lastLogin = []
         port = []
 
-        for x in range (0,len(input_data)):
+        for x in range (0,len(input_data)):                        #Store respective information in lists
             username.append(input_data[str(x)]['username'])
             ip.append(input_data[str(x)]['ip'])
             location.append(input_data[str(x)]['location'])
             lastLogin.append(input_data[str(x)]['lastLogin'])
             port.append(input_data[str(x)]['port'])
 
-        Database.StoreUsers(username,ip,location,lastLogin,port)
+        Database.StoreUsers(username,ip,location,lastLogin,port)   #Store the users in a database
         Users = Database.ExtractUsers()
         return Users
 
     @cherrypy.expose
-    def sum(self, a=0, b=0): #All inputs are strings by default
+    def sum(self, a=0, b=0):                                        #All inputs are strings by default
         output = int(a)+int(b)
         return str(output)
 
@@ -135,16 +123,15 @@ class MainApp(object):
     def signin(self, username=None, password=None):
         """Check their name and password and send them either to the main page, or back to the main login screen."""
         error = self.authoriseUserLogin(username,password)
-        if (error == 0):
+        if (error == 0):                                            #If signin is possible
             global LogIn
             LogIn = 1
-            cherrypy.session['username'] = username;
+            cherrypy.session['username'] = username;                #Store username & password
             cherrypy.session['password'] = password;
             raise cherrypy.HTTPRedirect('/')
         else:
             raise cherrypy.HTTPRedirect('/login')
 
-        #http://cs302.pythonanywhere.com/getList?username=rdso323&password=8f61a0b4911467540cd6df03e59e40d041323bc8beb1a3744e22bf4e7458b869&enc=0&json=0
     @cherrypy.expose
     def signout(self):
         """Logs the current user out, expires their session"""
@@ -161,17 +148,19 @@ class MainApp(object):
         if (username == None):
             pass
         else:
-            data = urllib.urlencode(values)  # Set values in dictionary together (Seperated with &)
+            data = urllib.urlencode(values)                           # Set values in dictionary together (Seperated with &)
             respdata = urllib2.urlopen(url + data).read()
             cherrypy.lib.sessions.expire()
         global LogIn
-        LogIn = 0
+        LogIn = 0                                                       #Stop calling Login API
+        global count
+        count = 0                                                       #Allow function to be called next log in 
         raise cherrypy.HTTPRedirect('/')
 
     def authoriseUserLogin(self, username, password):
         print username
         print password
-        password_hash = hashlib.sha256(password+username).hexdigest()			#Hash the password
+        password_hash = hashlib.sha256(password+username).hexdigest()	  #Hash the password
         if(ip.count('10.103')>0):
             location = 0
         elif(ip.count('172.2')>0):
@@ -187,65 +176,73 @@ class MainApp(object):
             'port' : listen_port,
             'enc' : '0'}
         try:
-            data = urllib.urlencode(values)					#Set values in dictionary together (Seperated with &)
+            data = urllib.urlencode(values)			  #Set values in dictionary together (Seperated with &)
             global Login_url
             Login_url = url + data
             respdata = urllib2.urlopen(url+data).read()
-            if(respdata.count('0')>=1):
+            if(respdata.count('0')>=1):                            #Check if login was succesful 
                 return 0
             elif(respdata.count('1')>=0):
                 return 1
 
         except Exception as e:
-            print(str(e))
             return 1
 
     @cherrypy.expose
-    def ping(self,sender):
+    def ping(self,sender):                                          #Call ping
         print 'ping working'
         return '0'
 
 
     @cherrypy.expose
-    def composeMessage(self):
-        Messages = Database.ExtractMessages()
+    def composeMessage(self):                                                   
+        Messages = Database.ExtractMessages()                               #Extract last 15 message from database
         return env.get_template('Message.html').render(Messages=Messages)
-        Page = file('Message.html')
+        Page = file('Message.html')                                         #Open html
         return Page
 
     @cherrypy.expose
     def composeFile(self):
-        Files = Database.ExtractFiles()
+        Files = Database.ExtractFiles()                                     #Extract last 15 file details and name
         Filename = Database.ExtractFileName()
-        return env.get_template('Files.html').render(Files=Files,Filename=Filename)
-        Page = file('Files.html')
+        Length = len(Files)
+        return env.get_template('Files.html').render(Files=Files,Filename=Filename,Len=Length)
+        Page = file('Files.html')                                           #Pass into html to print
         return Page
 
 
     @cherrypy.expose
     def sendMessage(self,UPI,Message):
-        output = {"sender":cherrypy.session['username'],"destination":UPI,
+        output = {"sender":cherrypy.session['username'],"destination":UPI,          #Create a dictionary to send
                   "message":Message,"stamp":time.time()}
 
-        data = json.dumps(output)
+        data = json.dumps(output)                                                   
         try:
-            IP = Database.ExtractIP(UPI)
+            IP = Database.ExtractIP(UPI)                                            #Find the desired users IP & Port
             Port = Database.ExtractPort(UPI)
         except:
-            Database.StoreMessage(output['sender'], output['destination'], output['message'],
-                                  output['stamp'], "Failed")
-            return "Database error"
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],   #If not possible set 
+                                  output['stamp'], "Failed")                                    #status to failed
+            return "User not in database"
 
         URL = 'http://' + IP + ':' + Port + '/receiveMessage'
 
-        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req).read()
-
-        if (response.count('0') >= 1):
-            Database.StoreMessage(output['sender'], output['destination'], output['message'],
+        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})     
+        
+        try:
+            response = urllib2.urlopen(req).read()                                              #Call the API
+        except:
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],   
+                                                                                                
+                                  output['stamp'], "Failed")
+            return "Delivery Failed"
+    
+        if (response.count('0') >= 1):                                                          #Check if message is sent
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],   #succesfully
                             output['stamp'], "Delivered")
         else:
-            Database.StoreMessage(output['sender'], output['destination'], output['message'],
+            Database.StoreMessage(output['sender'], output['destination'], output['message'],   #Otherwise the satus
+                                                                                                #is failed
                                   output['stamp'], "Failed")
             return "Delivery Failed"
 
@@ -256,24 +253,23 @@ class MainApp(object):
     @cherrypy.tools.json_in()
     def receiveMessage(self):
         input_data = cherrypy.request.json
-        Database.StoreMessage(input_data['sender'],input_data['destination'],input_data['message'],input_data['stamp'],"Received")
-        return '0'
+        Database.StoreMessage(input_data['sender'],input_data['destination'],input_data['message'],input_data['stamp'],"Received")                                                                                  #Store Message details
+        return '0'                                                                              #in a database
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
-    def receiveFile(self):
-        print 'File Received'
+    def receiveFile(self):                                                                          
         input_data = cherrypy.request.json
-        Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],
+        Database.StoreFile(input_data['sender'], input_data['destination'], input_data['file'],     
                         input_data['filename'], input_data['content_type'], input_data['stamp'],
-                           "Received")
-
-        file = base64.b64decode(input_data['file'])
+                           "Received")                                                          #Store file details
+                                                                                                #in database
+        file = base64.b64decode(input_data['file'])                                             
         path = "static/"
         filename = input_data['filename']
         full_path = os.path.join(path,filename)
-        with open(full_path, 'wb') as f:
-            f.write(file)
+        with open(full_path, 'wb') as f:                                                        #Decode file and write to a
+            f.write(file)                                                                       #blank file
         return '0'
 
     @cherrypy.expose
@@ -281,31 +277,36 @@ class MainApp(object):
         filename = File
         path = "static/"
         full_path = os.path.join(path,filename)
-        with open(full_path, "rb") as image_file:
-            file = base64.b64encode(image_file.read())
+        with open(full_path, "rb") as image_file:                                               #Setup path and decode
+            file = base64.b64encode(image_file.read())                                          #file
         output = {"sender":cherrypy.session.get('username'),"destination":UPI,
-                  "file":file,"filename":filename,"content_type":'image/jpeg',"stamp":time.time()}
+                  "file":file,"filename":filename,"content_type":'image/jpeg',"stamp":time.time()}  #Encode desire output
         data = json.dumps(output)
 
         try:
-            IP = Database.ExtractIP(UPI)
-            Port = Database.ExtractPort(UPI)
+            IP = Database.ExtractIP(UPI)                                                        #Attempt to extract IP
+            Port = Database.ExtractPort(UPI)                                                    #& Port
+        except:
+            Database.StoreFile(output['sender'], output['destination'], output['file'],         #Store file data
+                               output['filename'], output['content_type'], output['stamp'],     #in database with a
+                               "Failed")                                                        #fail status
+            return "User not in database"
+
+
+        URL = 'http://' + IP + ':' + Port + '/receiveFile'                                      
+
+        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})                  #Call desired protocol
+        
+        try:
+            response = urllib2.urlopen(req).read()
         except:
             Database.StoreFile(output['sender'], output['destination'], output['file'],
                                output['filename'], output['content_type'], output['stamp'],
                                "Failed")
-            return "Database error"
+            return "Delivery Failed"
 
-        #print data
-
-        URL = 'http://' + IP + ':' + Port + '/receiveFile'
-        print URL
-
-        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req).read()
-
-        if (response.count('0') >= 1):
-            Database.StoreFile(output['sender'], output['destination'], output['file'],
+        if (response.count('0') >= 1):                                                          #Check if file sent 
+            Database.StoreFile(output['sender'], output['destination'], output['file'],         #successfully
                                output['filename'], output['content_type'], output['stamp'],
                                "Delivered")
         else:
@@ -314,58 +315,71 @@ class MainApp(object):
                                "Failed")
             return "Delivery Failed"
 
-
         return response
 
 
     @cherrypy.expose
-    def InputProfile(self):
+    def InputProfile(self):                                                             #Page to display profile information
         Page = file('GetProfile.html')
         return Page
 
     @cherrypy.expose
-    def CallProfile(self,UPI):
-        Param = []
-        output = {"profile_username": UPI,
-                  "sender": cherrypy.session['username']}
+    def CallProfile(self,UPI):                                                           
+        Param = []                                                  
+        output = {"profile_username": UPI,                                              #Create data to call 
+                  "sender": cherrypy.session['username']}                               #Desired users profile
         data = json.dumps(output)
-        IP = Database.ExtractIP(UPI)
-        Port = Database.ExtractPort(UPI)
+        try:
+            IP = Database.ExtractIP(UPI)
+            Port = Database.ExtractPort(UPI)
+        except:
+            return "Unretrievable"
 
-        URL = 'http://' + IP + ':' + Port+ '/getProfile'
+        URL = 'http://' + IP + ':' + Port+ '/getProfile'                                
 
-        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
-        response = urllib2.urlopen(req).read()
+        req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})          #Call getProfile API
+        try:
+            response = urllib2.urlopen(req).read()
+        except:
+            return "Unretrievable"
+        
         response = json.loads(response)
-        print response
-        Param.append("Name: "+response['fullname'])
-        Param.append("Position: "+response['position'])
-        Param.append("Location: "+response['location'])
+
+        try:                                                                            #Try displaying user parameters
+            Param.append("Name: "+response['fullname'])                                 #if possible
+        except:
+            Param.append("Name: N/A")
+        try:
+            Param.append("Position: "+response['position'])
+        except:
+            Param.append("Position: N/A")
+        try:
+            Param.append("Location: "+response['location'])
+        except:
+            Param.append("Location: N/A")
+        
         Param.append("Last Fetched: "+ time.strftime("%D %H:%M", time.localtime(int(float(response['lastUpdated'])))))
         return env.get_template('DisplayProfile.html').render(Param=Param)
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
     def getProfile(self):
-        output = Database.ExtractProfile()
-        data = json.dumps(output)
+        output = Database.ExtractProfile()                                               #Extract details from database 
+        data = json.dumps(output)                                                        #and return
         return data
 
 
     @cherrypy.expose
-    def SaveProfile(self,Position,Name,Location):
+    def SaveProfile(self,Position,Name,Location):                                        #Save updated users bio
         Database.StoreProfile(time.time(),Name,Position,Location)
         return 'Details Updated'
-
-    #@cherrypy.expose
-    #def SaveProfile(self):
 
 
 def runMainApp():
     #Setup CSS
-    conf = {
-        '/':{
-            'tools.sessions.on': True,
+    conf = {                                                                              #Used to display unicode and  
+        '/':{                                                                             #css
+            'tools.sessions.on': True,                                  
             'tools.staticdir.root':os.path.abspath(os.getcwd()),
             'tools.encode.on': True,
             'tools.encode.encoding': 'utf-8',

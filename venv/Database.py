@@ -15,30 +15,20 @@ def StoreUsers(username,ip,location,lastLogin,port):
 
     cursor.execute(sql_command)
 
-    cursor.execute("DELETE FROM OnlineUsers")  # Delete previous entries each time
-
-
+    cursor.execute("DELETE FROM OnlineUsers")                                   #Delete previous entries each time
 
     cursor = connection.cursor()
 
- #   print(input_data)
-    #user_data = [("rdso323", "10.07.07", "2", "10007", "1507328626")]
-    # for x in len(0,username):
-    #     user_data = username[x]+
-
-    #print(input_data)
     for k in range(0,len(username)):
         user_data = [(username[k],ip[k],location[k],lastLogin[k],port[k])]
-
-        for p in user_data:
-            format_str = """INSERT INTO OnlineUsers (UPI, IP, Location, Last_Login, Port) 
+                                                                                                #Add online users 
+        for p in user_data:                                                                     #to database 
+            format_str = """INSERT INTO OnlineUsers (UPI, IP, Location, Last_Login, Port)                   
             VALUES ("{UPI}", "{IP}", "{Location}", "{Last_Login}", "{Port}");"""
 
             sql_command = format_str.format(UPI=p[0], IP=p[1], Location=p[2], Last_Login=p[3], Port=p[4],)
             cursor.execute(sql_command)
 
-
-    #print(res)
     # never forget this, if you want the changes to be saved:
     connection.commit()
 
@@ -46,14 +36,13 @@ def StoreUsers(username,ip,location,lastLogin,port):
 
 def ExtractUsers():
     Users = []
-    connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
+    connection = sqlite3.connect("Database.db")                                             #Extract UPI of all 
+    cursor = connection.cursor()                                                            #online users to display
     cursor.execute("SELECT * FROM OnlineUsers")
     res = cursor.fetchall()
     connection.close()
     for i in range (0,len(res)):
         Users.append(res[i][0])
-        #print res[i][0]
 
     return Users
 
@@ -72,23 +61,13 @@ def StoreMessage(sender,destination,message,stamp,status):
 
     cursor.execute(sql_command)
 
-    cursor = connection.cursor()
+    cursor = connection.cursor()                                                                #Store new messages
+                                                                                                #into a database
 
-    # print(input_data)
-    # user_data = [(sender, destination, message, stamp)]
-    #
-    #
-    # format_str = """INSERT INTO OnlineUsers (Sender,Destination,Message,Time_Stamp)
-    #     VALUES ("{Sender}", "{Destination}", "{Message}", "{Time_Stamp}");"""
-    #
-    # sql_command = format_str.format(sender, destination, message, stamp)
-    # cursor.execute(sql_command)
-
-    cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp, Status)
+    cursor.execute('''INSERT INTO Messages(Sender, Destination, Message, Time_Stamp, Status)    
                       VALUES(?,?,?,?,?)''', (sender, destination, message, stamp, status))
     print('User inserted')
 
-    # print(res)
     # never forget this, if you want the changes to be saved:
     connection.commit()
 
@@ -96,11 +75,11 @@ def StoreMessage(sender,destination,message,stamp,status):
 
 def StoreFile(sender,destination,file,filename,content_type,stamp,status):
     connection = sqlite3.connect("Database.db")
-    cursor = connection.cursor()
-
+    cursor = connection.cursor()                                                                #Store new files
+                                                                                                #into a database
     sql_command = """
        CREATE TABLE IF NOT EXISTS Files ( 
-       Sender TEXT, 
+       Sender TEXT,                                                                                 
        Destination TEXT,
        File  TEXT,
        Filename TEXT,
@@ -124,8 +103,8 @@ def StoreFile(sender,destination,file,filename,content_type,stamp,status):
 
 def ExtractPort(ID):
     connection = sqlite3.connect("Database.db")
-    fetch = connection.cursor()
-    connection.text_factory = str
+    fetch = connection.cursor()                                                             #Extract port based on
+    connection.text_factory = str                                                           #user UPI
     fetch.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = fetch.fetchone()[0]
     connection.close()
@@ -135,8 +114,8 @@ def ExtractPort(ID):
 
 
 def ExtractIP(ID):
-    connection = sqlite3.connect("Database.db")
-    fetch = connection.cursor()
+    connection = sqlite3.connect("Database.db")                                             #Extract IP based on
+    fetch = connection.cursor()                                                             #user UPI
     connection.text_factory = str
     fetch.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = fetch.fetchone()[0]
@@ -148,8 +127,8 @@ def ExtractIP(ID):
 
 def StoreProfile(timestamp,Name,Position,Location):
 
-    connection = sqlite3.connect("Database.db")
-
+    connection = sqlite3.connect("Database.db")                                             #Store updated profile 
+                                                                                            #details
     cursor = connection.cursor()
 
     sql_command = """
@@ -176,17 +155,30 @@ def StoreProfile(timestamp,Name,Position,Location):
 
 
 def ExtractProfile():
-    connection = sqlite3.connect("Database.db")
+    connection = sqlite3.connect("Database.db")                                 #Extract user profile details          
     cursor = connection.cursor()
-
-    cursor.execute('''SELECT Name FROM Profile ''')     #Retrieve required tuples
-    Name = cursor.fetchall()
-    cursor.execute('''SELECT Position FROM Profile ''')
-    Position = cursor.fetchall()
-    cursor.execute('''SELECT Location FROM Profile ''')
-    Location = cursor.fetchall()
-    cursor.execute('''SELECT LastUpdated FROM Profile ''')
-    LastUpdated = cursor.fetchall()
+    
+    
+    try:
+        cursor.execute('''SELECT Name FROM Profile ''')                         #Retrieve required tuples if possible
+        Name = cursor.fetchall()
+    except:
+        Name = "0"
+    try:
+        cursor.execute('''SELECT Position FROM Profile ''')
+        Position = cursor.fetchall()
+    except:
+        Position = "0"
+    try:
+        cursor.execute('''SELECT Location FROM Profile ''')
+        Location = cursor.fetchall()
+    except:
+        Location = "0"
+    try:
+        cursor.execute('''SELECT LastUpdated FROM Profile ''')
+        LastUpdated = cursor.fetchall()
+    except:
+        LastUpdated = "0"
 
     connection.close()
     user = dict([("lastUpdated",''.join(LastUpdated[0])),("fullname",''.join(Name[0])), #Convert tuples into one dictionary
@@ -194,13 +186,32 @@ def ExtractProfile():
     return user
 
 
-def ExtractMessages():                 #Extract & display last 15 messages
+def ExtractMessages():                                                      #Extract & display last 15 messages
+    
         Messages = []
         connection = sqlite3.connect("Database.db")
+        cursor = connection.cursor()                                            #Extract messages to display
+        
+        sql_command = """
+       CREATE TABLE IF NOT EXISTS Messages ( 
+       Sender TEXT, 
+       Destination TEXT,
+       Message  TEXT,
+       Time_Stamp TEXT,
+       Status Text);"""
+       
+        cursor.execute(sql_command)
+
         cursor = connection.cursor()
+       
         cursor.execute('''SELECT Sender, Destination, Message, Status FROM Messages''')
         res = cursor.fetchall()
         connection.close()
+        
+        if(len(res)==0):                                                        # If fields are empty 
+            Messages.append("None available")                                   # return "None "available"
+            return Messages
+        
         if(len(res)>15):
             length = 15
         else:
@@ -212,12 +223,32 @@ def ExtractMessages():                 #Extract & display last 15 messages
         return Messages
 
 def ExtractFiles():
-        Files = []                                      #Extract & display last 5 files
+        Files = []                                                      #Extract & display last 5 files
         connection = sqlite3.connect("Database.db")
         cursor = connection.cursor()
+        
+        sql_command = """
+       CREATE TABLE IF NOT EXISTS Files ( 
+       Sender TEXT, 
+       Destination TEXT,
+       File  TEXT,
+       Filename TEXT,
+       Content_Type TEXT,
+       Time_Stamp TEXT,
+       Status TEXT);"""
+       
+        cursor.execute(sql_command)
+
+        cursor = connection.cursor()
+        
         cursor.execute('''SELECT Sender, Destination, Filename, Status FROM Files''')
         res = cursor.fetchall()
         connection.close()
+        
+        if(len(res)==0):                                                            # If fields are empty
+            Files.append("None available")                                          # return "None "available"
+            return Files
+           
         if(len(res)>10):
             length = 10
         else:
@@ -229,12 +260,32 @@ def ExtractFiles():
         return Files
     
 def ExtractFileName():
-        Files = []                                      #Extract & display last 5 files
+        Files = []                                                      #Extract & display last 5 filenames
         connection = sqlite3.connect("Database.db")
         cursor = connection.cursor()
+        
+        sql_command = """
+       CREATE TABLE IF NOT EXISTS Files ( 
+       Sender TEXT, 
+       Destination TEXT,
+       File  TEXT,
+       Filename TEXT,
+       Content_Type TEXT,
+       Time_Stamp TEXT,
+       Status TEXT);"""
+       
+        cursor.execute(sql_command)
+        
+        cursor = connection.cursor()
+        
         cursor.execute('''SELECT Filename FROM Files''')
         res = cursor.fetchall()
         connection.close()
+        
+        if(len(res)==0):                                                        # If fields are empty
+            Files.append("None available")                                      # return "None "available"
+            return Files
+        
         if(len(res)>10):
             length = 10
         else:

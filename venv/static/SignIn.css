@@ -2,9 +2,12 @@ body{
     background-image: url(sea-sky-sunset-water.jpg);
     background-repeat: no-repeat;
     background-position: center;
+    background-size: auto;
     font-family: Ariel;
     color: White
 }
+
+
 
 #File{
 }

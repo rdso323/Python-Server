@@ -13,9 +13,9 @@
         <br/><br/><input class="loginBtn" type="submit" value="Submit"/></form>
 
     <h3 class = Files><br/>Previous Files (Sender:Receiver:File):</h3>
-    {% for T in range(0,10) %}
+    {% for T in range (0,Len) %}
             <li>{{Files[T]}}</li>
-            <img src="static/{{Filename[T]}}" alt = Failed height= 200 width = 200>
+            <img src="static/{{Filename[T]}}" alt = "Not Viewable" height= 150 width = 150>
     {% endfor %}
 </body>
 </html>
