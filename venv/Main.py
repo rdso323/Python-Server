@@ -21,6 +21,7 @@ import os,os.path
 import base64
 import time
 import threading
+import datetime
 from jinja2 import Environment, FileSystemLoader
 env = Environment(loader=FileSystemLoader(""))
 global count
@@ -64,15 +65,6 @@ class MainApp(object):
                 count = 1
             Users = self.UserDisplay()
             return env.get_template('Main_Screen.html').render(username=username, Users=Users)
-            # Page = "Hello " + cherrypy.session['username'] + "!<br/'composeMessage'>send messages</a>"
-            #             # Page += "<br/>Click here to <a href='comp>"
-            #             # Page += "Here is some bonus text because you've logg
-            #             #             # Page += self.UserDisplay()
-            #             #             # Page += "<br/><br/>Click here to <a href=oseFile'>send files</a>"
-            #             # Page += "<br/>Click here to view <a href='InputProfileed in! <br/><br/>"
-            # Page += "Online Users:<br/>"'>Profiles</a>"
-            # Page += "<br/><br/>Click here to edit <a href='EditProfile'>Profile</a>"
-            # Page += "<br/>Click here to <a href='signout'>Logout</a>."
             Page = file('Main_Screen.html')
         except KeyError: #There is no username
             Page = "Welcome to the COMPSYS302 Login Page!<br/>"
@@ -224,7 +216,8 @@ class MainApp(object):
     @cherrypy.expose
     def composeFile(self):
         Files = Database.ExtractFiles()
-        return env.get_template('Files.html').render(Files=Files)
+        Filename = Database.ExtractFileName()
+        return env.get_template('Files.html').render(Files=Files,Filename=Filename)
         Page = file('Files.html')
         return Page
 
@@ -259,11 +252,6 @@ class MainApp(object):
         return response
 
 
-    # 	cherrypy.session['sender'] = sender;
-    # 	cherrypy.session['message'] = message;
-    # 	Database.ExtractMessage(sender,destination,message,stamp)
-    # 	return 'Message Recieved'
-
     @cherrypy.expose
     @cherrypy.tools.json_in()
     def receiveMessage(self):
@@ -281,15 +269,19 @@ class MainApp(object):
                            "Received")
 
         file = base64.b64decode(input_data['file'])
+        path = "static/"
         filename = input_data['filename']
-        with open(filename, 'wb') as f:
+        full_path = os.path.join(path,filename)
+        with open(full_path, 'wb') as f:
             f.write(file)
         return '0'
 
     @cherrypy.expose
     def sendFile(self,UPI,File):
         filename = File
-        with open(File, "rb") as image_file:
+        path = "static/"
+        full_path = os.path.join(path,filename)
+        with open(full_path, "rb") as image_file:
             file = base64.b64encode(image_file.read())
         output = {"sender":cherrypy.session.get('username'),"destination":UPI,
                   "file":file,"filename":filename,"content_type":'image/jpeg',"stamp":time.time()}
@@ -333,6 +325,7 @@ class MainApp(object):
 
     @cherrypy.expose
     def CallProfile(self,UPI):
+        Param = []
         output = {"profile_username": UPI,
                   "sender": cherrypy.session['username']}
         data = json.dumps(output)
@@ -343,9 +336,13 @@ class MainApp(object):
 
         req = urllib2.Request(URL, data, {'Content-Type': 'application/json'})
         response = urllib2.urlopen(req).read()
+        response = json.loads(response)
         print response
-        Response = response['fullname']
-        return Response
+        Param.append("Name: "+response['fullname'])
+        Param.append("Position: "+response['position'])
+        Param.append("Location: "+response['location'])
+        Param.append("Last Fetched: "+ time.strftime("%D %H:%M", time.localtime(int(float(response['lastUpdated'])))))
+        return env.get_template('DisplayProfile.html').render(Param=Param)
 
     @cherrypy.expose
     @cherrypy.tools.json_in()

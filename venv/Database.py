@@ -227,3 +227,20 @@ def ExtractFiles():
                          res[len(res)-i-1][2] + " - " + res[len(res)-i-1][3])
         print Files
         return Files
+    
+def ExtractFileName():
+        Files = []                                      #Extract & display last 5 files
+        connection = sqlite3.connect("Database.db")
+        cursor = connection.cursor()
+        cursor.execute('''SELECT Filename FROM Files''')
+        res = cursor.fetchall()
+        connection.close()
+        if(len(res)>10):
+            length = 10
+        else:
+            length = len(res)
+        for i in range (0,length):
+            Files.append(res[len(res)-i-1][0])
+
+        print Files
+        return Files
