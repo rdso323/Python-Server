@@ -8,7 +8,7 @@ Build instructions:
 
 3. Type into command line: "python Main.py", then hit enter and the Bus should start.
 
-4. Right click on the url provided (http://0.0.0.0:10007) and select open link.
+4. Right click on the url provided (http://0.0.0.0:10007) and select "Open Link".
 
 
 
