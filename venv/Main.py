@@ -158,8 +158,6 @@ class MainApp(object):
         raise cherrypy.HTTPRedirect('/')
 
     def authoriseUserLogin(self, username, password):
-        print username
-        print password
         password_hash = hashlib.sha256(password+username).hexdigest()	  #Hash the password
         if(ip.count('10.103')>0):
             location = 0

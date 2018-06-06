@@ -108,7 +108,6 @@ def ExtractPort(ID):
     fetch.execute('''SELECT Port FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = fetch.fetchone()[0]
     connection.close()
-    print user
     #user = ''.join(user)
     return user
 
@@ -120,7 +119,6 @@ def ExtractIP(ID):
     fetch.execute('''SELECT IP FROM OnlineUsers WHERE UPI=?''', (ID,))
     user = fetch.fetchone()[0]
     connection.close()
-    print user
     return user
 
 
@@ -219,7 +217,6 @@ def ExtractMessages():                                                      #Ext
         for i in range (0,length):
             Messages.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1]
                             + " : " + res[len(res)-i-1][2] + " - " + res[len(res)-i-1][3])
-        print Messages
         return Messages
 
 def ExtractFiles():
@@ -256,7 +253,6 @@ def ExtractFiles():
         for i in range (0,length):
             Files.append(res[len(res)-i-1][0] + " : " + res[len(res)-i-1][1] + " : " +
                          res[len(res)-i-1][2] + " - " + res[len(res)-i-1][3])
-        print Files
         return Files
     
 def ExtractFileName():
@@ -293,5 +289,4 @@ def ExtractFileName():
         for i in range (0,length):
             Files.append(res[len(res)-i-1][0])
 
-        print Files
         return Files
